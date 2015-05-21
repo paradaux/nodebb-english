@@ -15,9 +15,18 @@ Add the config to Apache
 
 The next step is adding the configuration to your ``virtualhost.conf`` file, typically located in ``/etc/apache2/sites-available/``.
 The below configuration assumes you've used 4567 (default) port for NobeBB installation. It also assumes you have the bind address
-set to 127.0.0.1.
+set to 127.0.0.1. The below configuration also demonstrates how you can run NodeBB using a subdomain proxy. Using a regular domain proxy is the same process but without additional <VirtualHost>.
 
 .. code::
+
+    <VirtualHost example.com:80>
+        ServerAdmin example@gmail.com
+        ServerName example.com
+        ServerAlias www.example.com
+        DocumentRoot /var/www/example.com/public_html/
+        ErrorLog /var/www/example.com/logs/error.log
+        CustomLog /var/www/example.com/logs/access.log combined
+    </VirtualHost>
 
     ProxyRequests off
 
@@ -25,17 +34,24 @@ set to 127.0.0.1.
         Order deny,allow
         Allow from all
     </Proxy>
-    ProxyPass /socket.io/1/websocket ws://127.0.0.1:4567/socket.io/1/websocket
-    ProxyPassReverse /socket.io/1/websocket ws://127.0.0.1:4567/socket.io/1/websocket
 
-    ProxyPass /socket.io/ http://127.0.0.1:4567/socket.io/
-    ProxyPassReverse /socket.io/ http://127.0.0.1:4567/socket.io/
+    <VirtualHost forum.example.com:80>
+        ServerAdmin example@gmail.com
+        ServerName forum.example.com
+        ServerAlias forum.example.com
 
-    ProxyPass / http://127.0.0.1:4567/
-    ProxyPassReverse / http://127.0.0.1:4567/
+        ProxyPass /socket.io/1/websocket ws://127.0.0.1:4567/socket.io/1/websocket
+        ProxyPassReverse /socket.io/1/websocket ws://127.0.0.1:4567/socket.io/1/websocket
+
+        ProxyPass /socket.io/ http://127.0.0.1:4567/socket.io/
+        ProxyPassReverse /socket.io/ http://127.0.0.1:4567/socket.io/
+
+        ProxyPass / http://127.0.0.1:4567/
+        ProxyPassReverse / http://127.0.0.1:4567/
+    </VirtualHost>
 
 
-The last thing you need to be sure of is that the ``config.json`` in the NodeBB folder defines the node.js port outside of the url:
+The next thing you need to be sure of is that the ``config.json`` in the NodeBB folder defines the node.js port outside of the url:
 
 
 
@@ -59,3 +75,8 @@ Example nodebb/config.json
 
 
 **Change the domain and dont use the secret in the example above.**
+
+Setting up A/AAAA Record for Subdomain
+---------------------------------------
+
+Finally you will need to setup an A/AAAA record using your DNS Manager to add the subdomain. In the above example virtualhost.conf file, you would add 'forum'
